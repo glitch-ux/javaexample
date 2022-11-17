@@ -9,9 +9,29 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-
+    container:
+      image: agent:2
+      
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Artifactory info
+        run: |
+          jf rt bag maven-gitlab 1 .
+          jf rt bp maven-gitlab 1 --url $JF_URL --access-token $JF_TOKEN
 
-      - name: Run a one-line script
-        run: echo Hello from Octo Organization
+
+      - name: Maven package
+        run: mvn package
+
+      - name: Upload Artifactory
+        run: |
+          jf rt u ./target/ArtifactSample-0.0.1.war generic-local/ --url $JF_URL --access-token $JF_TOKEN
+
+      - name: Deploy Azure
+        run: |
+          jf rt dl generic-local/target/ teste/ --url $JF_URL --access-token $JF_TOKEN
+          az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD -t $AZURE_TENANT_ID
+          az account set -s $AZURE_SUBSCRIPTION_ID
+          az webapp deploy --resource-group myapp-rg --name testecenas123 --type war --src-path ./teste/target/ArtifactSample-0.0.1.war --restart true
+
