@@ -1,0 +1,66 @@
+# Docker
+
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- none
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      name: local
+    steps:
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        repository: 'qa'
+        command: build
+        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        
+
+    - task: CmdLine@2
+      displayName: Save Docker Image
+      inputs:
+        script: |
+          docker save qa:$(tag) -o $(Pipeline.Workspace)/qa_deploy.tar
+    
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Pipeline.Workspace)/qa_deploy.tar'
+        artifact: 'QA_Artifact'
+        publishLocation: 'pipeline'
+
+- stage: Deploy
+  displayName: Deploy image
+  jobs:
+  - job: PullImage
+    displayName: Pull image
+    pool:
+      name: local
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'QA_Artifact'
+        targetPath: '$(Pipeline.Workspace)'
+    - task: CmdLine@2
+      displayName: Load Docker Image
+      inputs:
+        script: |      
+          docker load --input $(Pipeline.Workspace)/qa_deploy.tar
+    - task: CmdLine@2
+      displayName: Run Docker Image
+      inputs:
+        script: |      
+          docker run -d -p 8080:8080 qa:$(tag)

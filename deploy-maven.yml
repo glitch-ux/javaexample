@@ -1,0 +1,30 @@
+parameters:
+  - name: targetPath
+    type: string
+  - name: tomUsername
+    type: string
+  - name: tomPassword
+    type: string
+  - name: artifactName
+    type: string
+
+
+jobs:
+- job: MavenPackageAndPublishArtifacts
+  displayName: Maven Package and Publish Artifacts
+  steps:
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: 'current'
+      artifactName: '${{ parameters.artifactName }}'
+      targetPath: '${{ parameters.targetPath }}'
+
+  - task: TomcatDeployment@1
+    inputs:
+      TomcatUrl: 'http://localhost:8080'
+      Username: '${{ parameters.tomUsername }}'
+      Password: '${{ parameters.tomPassword }}'
+      Context: '/'
+      ServerVersion: '7OrAbove'
+      Warfile: '${{ parameters.targetPath }}/JSPSample-0.0.1.war'

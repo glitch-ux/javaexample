@@ -1,0 +1,48 @@
+parameters:
+  - name: RegistryServiceConncection
+    type: string
+  - name: imageRepository
+    type: string
+  - name: containerRegistry
+    type: string
+  - name: dockerfilePath
+    type: string
+  - name: tag
+    type: string
+  - name: parentPort
+    type: string
+  - name: childPort
+    type: string
+
+variables:
+  dockerRegistryServiceConnection: ${{ parameters.RegistryServiceConnection }}
+  imageRepository: ${{ parameters.imageRepository }}
+  containerRegistry: ${{ parameters.containerRegistry }}
+  dockerfilePath: ${{ parameters.dockerfilePath }}
+  tag: ${{ parameters.tag }}
+
+jobs:
+- job: MavenPackageAndPublishArtifacts
+  displayName: Maven Package and Publish Artifacts
+  steps:
+
+  - task: Docker@2
+    displayName: Build and push an image to container registry
+    inputs:
+      command: buildAndPush
+      repository: $(imageRepository)
+      dockerfile: $(dockerfilePath)
+      containerRegistry: $(dockerRegistryServiceConnection)
+      tags: |
+        $(tag)
+  - task: CmdLine@2
+    displayName: Load Docker Image
+    inputs:
+      script: |      
+         docker pull $(containerRegistry)/$(imageRepository):$(tag)
+
+  - task: CmdLine@2
+    displayName: Run Docker Image
+    inputs:
+      script: |      
+        docker run -d -p ${{ parameters.parentPort }}:${{ parameters.childPort }} $(containerRegistry)/$(imageRepository):$(tag)

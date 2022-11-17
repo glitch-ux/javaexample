@@ -1,0 +1,30 @@
+parameters:
+  - name: PomFile
+    type: string
+  - name: MavenOptions
+    type: string
+  - name: Goals
+    type: string
+  - name: AlternativeOptions
+    type: string
+
+
+jobs:
+- job: MavenPackageAndPublishArtifacts
+  displayName: Maven Package and Publish Artifacts
+  steps:
+  - task: Maven@3
+    displayName: 'Maven Package'
+    inputs:
+      mavenPomFile: '${{ parameters.PomFile }}' 
+      mavenOptions: '${{ parameters.MavenOptions }}'
+      goals: '${{ parameters.Goals }}'
+      options: '${{ parameters.AlternativeOptions }}'
+        
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/target/JSPSample-0.0.1.war'
+      artifact: 'drop'
+      publishLocation: 'pipeline'
+

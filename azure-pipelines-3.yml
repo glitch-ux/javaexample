@@ -1,0 +1,67 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- none
+
+variables:
+
+  # Environment name
+  environmentName: 'localhost'
+
+
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: MavenPackageAndPublishArtifacts
+    displayName: Maven Package and Publish Artifacts
+    pool:
+      name: local
+
+    steps:
+    - task: Maven@3
+      displayName: 'Maven Package'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        
+
+    - task: CopyFiles@2
+      displayName: 'Copy Files to artifact staging directory'
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)'
+        Contents: '**/target/*.?(war|jar)'
+        TargetFolder: $(Build.ArtifactStagingDirectory)
+
+    - upload: $(Build.ArtifactStagingDirectory)
+      artifact: drop
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: DeployToLocalHost
+    displayName: Deploy to local host
+    pool:
+      name: local
+
+    steps:
+      
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          buildType: 'current'
+          artifactName: 'drop'
+          targetPath: '$(Pipeline.Workspace)'
+      - task: TomcatDeployment@1
+        inputs:
+          TomcatUrl: 'http://localhost:8080'
+          Username: 'admin'
+          Password: 'teste'
+          Context: '/'
+          ServerVersion: '7OrAbove'
+          Warfile: '$(Pipeline.Workspace)/target/JSPSample-0.0.1.war'
+  

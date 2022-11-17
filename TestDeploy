@@ -1,0 +1,47 @@
+node {
+    def server
+    def rtMaven = Artifactory.newMavenBuild()
+    def buildInfo
+
+
+    stage ('Artifactory configuration') {
+        // Obtain an Artifactory server instance, defined in Jenkins --> Manage Jenkins --> Configure System:
+        server = Artifactory.server "jfrog-instance"
+
+        // Tool name from Jenkins configuration
+        rtMaven.tool = "maven3.8.6"
+        rtMaven.deployer releaseRepo: "example-repo-local", server: server
+        buildInfo = Artifactory.newBuildInfo()
+    }
+
+    stage ('Exec Maven') {
+        rtMaven.run pom: 'pom.xml', goals: 'package', buildInfo: buildInfo
+    }
+
+    stage ('Publish Artifact and build info') {
+        server.publishBuildInfo buildInfo
+        rtMaven.deployer.deployArtifacts buildInfo
+        
+    }
+
+    stage ('Download Artifact') {
+        def downloadSpec = """{
+            "files": [
+        {
+          "pattern": "example-repo-local/JSPSample/JSPSample/0.0.1/*.war",
+          "target": "/var/jenkins_home/workspace/Build-Deploy Maven/Teste",
+          "regexp": "true"
+        }
+            ]
+         }"""
+        server.download spec: downloadSpec, buildInfo: buildInfo
+        
+    }
+
+     stage ('Publish Azure') {
+        azureWebAppPublish azureCredentialsId: 'azure-principal-jenkins',
+                   resourceGroup: 'myapp-rg', appName: 'testplan7854',
+                   filePath: '*.war', sourceDirectory: '/var/jenkins_home/workspace/Build-Deploy Maven/JSPSample/JSPSample/0.0.1/Teste', targetDirectory: 'webapps'
+        
+    }
+}
