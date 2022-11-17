@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  build:
+  UploadBuildInfo:
     runs-on: self-hosted-linux
       
     steps:
@@ -18,14 +18,25 @@ jobs:
           jf rt bag maven-gitlab 1 .
           jf rt bp maven-gitlab 1 --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
 
-
+  Build:
+    runs-on: self-hosted-linux
+    
+    steps:
       - name: Maven package
         run: mvn package
-
+        
+  UploadArtifactory:
+    runs-on: self-hosted-linux
+    
+    steps:
       - name: Upload Artifactory
         run: |
           jf rt u ./target/ArtifactSample-0.0.1.war generic-local/ --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
-
+          
+  DeployAzure:
+    runs-on: self-hosted-linux
+    
+    steps:
       - name: Deploy Azure
         run: |
           jf rt dl generic-local/target/ teste/ --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
