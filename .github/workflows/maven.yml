@@ -16,7 +16,7 @@ jobs:
       - name: Artifactory info
         run: |
           jf rt bag maven-gitlab 1 .
-          jf rt bp maven-gitlab 1 --url $JF_URL --access-token $JF_TOKEN
+          jf rt bp maven-gitlab 1 --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
 
 
       - name: Maven package
@@ -24,12 +24,12 @@ jobs:
 
       - name: Upload Artifactory
         run: |
-          jf rt u ./target/ArtifactSample-0.0.1.war generic-local/ --url $JF_URL --access-token $JF_TOKEN
+          jf rt u ./target/ArtifactSample-0.0.1.war generic-local/ --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
 
       - name: Deploy Azure
         run: |
-          jf rt dl generic-local/target/ teste/ --url $JF_URL --access-token $JF_TOKEN
-          az login --service-principal -u $AZURE_USERNAME -p $AZURE_PASSWORD -t $AZURE_TENANT_ID
-          az account set -s $AZURE_SUBSCRIPTION_ID
+          jf rt dl generic-local/target/ teste/ --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
+          az login --service-principal -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} -t ${{ secrets.AZURE_TENANT_ID }}
+          az account set -s ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           az webapp deploy --resource-group myapp-rg --name testecenas123 --type war --src-path ./teste/target/ArtifactSample-0.0.1.war --restart true
 
