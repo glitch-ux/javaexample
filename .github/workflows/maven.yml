@@ -7,8 +7,8 @@ on:
       - main
 
 jobs:
-  BuildAndDeply:
-    runs-on: self-hosted-linux
+  BuildAndDeploy:
+    runs-on: self-hosted-terraform
       
     steps:
       - uses: actions/checkout@v3
