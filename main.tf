@@ -42,6 +42,10 @@ resource "azurerm_linux_web_app" "webapp" {
   https_only            = true
   zip_deploy_file       = var.zip_path
   
+  app_settings = {
+    "WEBSITE_RUN_FROM_PACKAGE" = 1
+  }
+  
   site_config { 
     application_stack {
     java_server = "TOMCAT"
