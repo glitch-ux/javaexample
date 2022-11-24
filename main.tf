@@ -34,12 +34,14 @@ resource "azurerm_linux_web_app" "webapp" {
   resource_group_name   = "myapp-rg"
   service_plan_id       = azurerm_service_plan.appserviceplan.id
   https_only            = true
-  zip_deploy_file       = "/actions-runner/_work/javaexample/javaexample/teste/target/ArtifactSample-0.0.1.war"
+  
   site_config { 
+    application_stack {
+    java_server = "TOMCAT"
+    }
+    zip_deploy_file = "/actions-runner/_work/javaexample/javaexample/teste/target/ArtifactSample-0.0.1.war"
     minimum_tls_version = "1.2"
   }
-  application_stack {
-    java_server = "TOMCAT"
-  }
+  
 }
 
