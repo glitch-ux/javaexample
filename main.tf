@@ -18,6 +18,12 @@ variable "zip_path" {
 
 }
 
+data "archive_file" "file_function_app" {
+  type        = "war"
+  source_dir  = "./teste/target/"
+  output_path = "ArtifactSample-0.0.1.war"
+}
+
 resource "random_integer" "ri" {
   min = 10000
   max = 99999
@@ -40,7 +46,7 @@ resource "azurerm_linux_web_app" "webapp" {
   resource_group_name   = "myapp-rg"
   service_plan_id       = azurerm_service_plan.appserviceplan.id
   https_only            = true
-  zip_deploy_file       = var.zip_path
+  zip_deploy_file       = var.archive_file.output_path
   
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE" = 1
