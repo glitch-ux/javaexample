@@ -1,0 +1,42 @@
+name: Maven Build Deploy
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  BuildAndDeploy:
+    runs-on: self-hosted-terrafrom
+      
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Artifactory info
+        run: |
+          pwd
+          jf rt bag maven-gitlab 1 .
+          jf rt bp maven-gitlab 1 --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
+          
+      - name: Maven package
+        run: mvn package
+        
+    
+      - name: Upload Artifactory
+        run: |
+          jf rt u ./target/ArtifactSample-0.0.1.war generic-local/ --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
+          
+      - name: Terraform Deploy Azure
+        run: |
+          jf rt dl generic-local/target/ teste/ --url ${{ secrets.JF_URL }} --access-token ${{ secrets.JF_TOKEN }}
+          az login --service-principal -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }} -t ${{ secrets.AZURE_TENANT_ID }}
+          az account set -s ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          export ARM_CLIENT_ID=${{ secrets.AZURE_USERNAME }
+          export ARM_CLIENT_SECRET=${{ secrets.AZURE_PASSWORD }}
+          export ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          export ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+          terraform init
+          terraform fmt
+          terraform apply
+          terraform show
