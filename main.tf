@@ -12,6 +12,12 @@ provider "azurerm" {
   features {}
 }
 
+variable "zip_path" {
+  type = string
+  default = "/actions-runner/_work/javaexample/javaexample/teste/target/ArtifactSample-0.0.1.war"
+
+}
+
 resource "random_integer" "ri" {
   min = 10000
   max = 99999
@@ -42,6 +48,6 @@ resource "azurerm_linux_web_app" "webapp" {
     minimum_tls_version = "1.2"
   }
   
-  zip_deploy_file = "/actions-runner/_work/javaexample/javaexample/teste/target/ArtifactSample-0.0.1.war"
+  zip_deploy_file = zip_path
 }
 
