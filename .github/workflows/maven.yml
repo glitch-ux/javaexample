@@ -8,7 +8,7 @@ on:
 
 jobs:
   BuildAndDeploy:
-    runs-on: self-hosted-terraform
+    runs-on: self-hosted-terrafrom
       
     steps:
       - uses: actions/checkout@v3
